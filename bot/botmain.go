@@ -15,8 +15,8 @@ var Messages = make(chan config.Message)
 var langtab = 0
 
 func Main(wg *sync.WaitGroup, discord *discordgo.Session) {
-	//discord.AddHandler(EmoteAddHandler)
-	//discord.AddHandler(EmoteRemoveHandler)
+	discord.AddHandler(EmoteAddHandler)
+	discord.AddHandler(EmoteRemoveHandler)
 	if err := discord.Open(); err != nil {
 		println("Couldn't connect to discord.")
 		println(err)
@@ -25,6 +25,8 @@ func Main(wg *sync.WaitGroup, discord *discordgo.Session) {
 
 	//go SetupEmotes(discord) //Comment me out after first run!
 	go DayHandler(discord)
+
+	//discord.MessageReactionAdd(config.RoleChannelID, config.LangMessageID[2], "Brainfuck:517837754957037568")
 
 	//Got the CLI->Bot communication line down.
 	stop := false
@@ -57,12 +59,12 @@ func Main(wg *sync.WaitGroup, discord *discordgo.Session) {
 }
 
 func SetupEmotes(discord *discordgo.Session) {
-	for k := range config.LangToRole {
+	for k := range config.SetupLangToRole {
 		_ = discord.MessageReactionAdd(config.RoleChannelID, config.LangMessageID[langtab%len(config.LangMessageID)], k) //It really doesn't matter if this has an error.
 		langtab++
 	}
 
-	for k := range config.ParadigmToRole {
+	for k := range config.SetupParadigmToRole {
 		_ = discord.MessageReactionAdd(config.RoleChannelID, config.ParadigmMessageID, k) //This is expected to error out on subsequent runs anyway.
 	}
 }
@@ -133,8 +135,6 @@ func DayHandler(discord *discordgo.Session) {
 }
 
 func EmoteAddHandler(discord *discordgo.Session, emote *discordgo.MessageReactionAdd) {
-	println(emote.Emoji.ID)
-
 	langmess := false
 	for _,v := range config.LangMessageID {
 		if emote.MessageID == v {

@@ -12,17 +12,18 @@ import (
 )
 
 var Messages = make(chan config.Message)
+var langtab = 0
 
 func Main(wg *sync.WaitGroup, discord *discordgo.Session) {
-	discord.AddHandler(EmoteAddHandler)
-	discord.AddHandler(EmoteRemoveHandler)
+	//discord.AddHandler(EmoteAddHandler)
+	//discord.AddHandler(EmoteRemoveHandler)
 	if err := discord.Open(); err != nil {
 		println("Couldn't connect to discord.")
 		println(err)
 		os.Exit(0)
 	}
 
-	go SetupEmotes(discord)
+	//go SetupEmotes(discord) //Comment me out after first run!
 	go DayHandler(discord)
 
 	//Got the CLI->Bot communication line down.
@@ -32,11 +33,14 @@ func Main(wg *sync.WaitGroup, discord *discordgo.Session) {
 		message := <-Messages
 		switch message.Type {
 		case config.M_NEWLANG:
-			_ = discord.MessageReactionAdd(config.RoleChannelID, config.LangMessageID, message.Data)
+			_ = discord.MessageReactionAdd(config.RoleChannelID, config.LangMessageID[langtab%len(config.LangMessageID)], message.Data)
+			langtab++
 		case config.M_NEWPARADIGM:
 			_ = discord.MessageReactionAdd(config.RoleChannelID, config.ParadigmMessageID, message.Data)
 		case config.M_RMLANG:
-			_ = discord.MessageReactionRemove(config.RoleChannelID, config.LangMessageID, message.Data, config.BotUserID)
+			for _, v := range config.LangMessageID {
+				_ = discord.MessageReactionRemove(config.RoleChannelID, v, message.Data, config.BotUserID)
+			}
 		case config.M_RMPARADIGM:
 			_ = discord.MessageReactionRemove(config.RoleChannelID, config.ParadigmMessageID, message.Data, config.BotUserID)
 		case config.M_QUIT:
@@ -54,7 +58,8 @@ func Main(wg *sync.WaitGroup, discord *discordgo.Session) {
 
 func SetupEmotes(discord *discordgo.Session) {
 	for k := range config.LangToRole {
-		_ = discord.MessageReactionAdd(config.RoleChannelID, config.LangMessageID, k) //It really doesn't matter if this has an error.
+		_ = discord.MessageReactionAdd(config.RoleChannelID, config.LangMessageID[langtab%len(config.LangMessageID)], k) //It really doesn't matter if this has an error.
+		langtab++
 	}
 
 	for k := range config.ParadigmToRole {
@@ -129,14 +134,21 @@ func DayHandler(discord *discordgo.Session) {
 
 func EmoteAddHandler(discord *discordgo.Session, emote *discordgo.MessageReactionAdd) {
 	println(emote.Emoji.ID)
-	switch emote.MessageID {
-	case config.LangMessageID:
+
+	langmess := false
+	for _,v := range config.LangMessageID {
+		if emote.MessageID == v {
+			langmess = true
+		}
+	}
+
+	if langmess {
 		//Add a language role.
 		if err := discord.GuildMemberRoleAdd(emote.GuildID, emote.UserID, config.LangToRole[emote.Emoji.ID]); err != nil {
 			println("Failed to add role", config.LangToRole[emote.Emoji.ID], "to user", emote.UserID)
 			println(err.Error())
 		}
-	case config.ParadigmMessageID:
+	} else if emote.MessageID == config.ParadigmMessageID {
 		//Add a paradigm role.
 		if err := discord.GuildMemberRoleAdd(emote.GuildID, emote.UserID, config.ParadigmToRole[emote.Emoji.ID]); err != nil {
 			println("Failed to add role", config.ParadigmToRole[emote.Emoji.ID], "to user", emote.UserID)
@@ -146,14 +158,20 @@ func EmoteAddHandler(discord *discordgo.Session, emote *discordgo.MessageReactio
 }
 
 func EmoteRemoveHandler(discord *discordgo.Session, emote *discordgo.MessageReactionRemove) {
-	switch emote.MessageID {
-	case config.LangMessageID:
+	langmess := false
+	for _,v := range config.LangMessageID {
+		if emote.MessageID == v {
+			langmess = true
+		}
+	}
+
+	if langmess {
 		//Add a language role.
 		if err := discord.GuildMemberRoleRemove(emote.GuildID, emote.UserID, config.LangToRole[emote.Emoji.ID]); err != nil {
 			println("Failed to remove role", config.LangToRole[emote.Emoji.ID], "from user", emote.UserID)
 			println(err.Error())
 		}
-	case config.ParadigmMessageID:
+	} else if emote.MessageID == config.ParadigmMessageID {
 		//Add a paradigm role.
 		if err := discord.GuildMemberRoleRemove(emote.GuildID, emote.UserID, config.ParadigmToRole[emote.Emoji.ID]); err != nil {
 			println("Failed to remove role", config.ParadigmToRole[emote.Emoji.ID], "from user", emote.UserID)

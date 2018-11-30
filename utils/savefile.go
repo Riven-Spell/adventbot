@@ -9,7 +9,7 @@ func SaveFile(name string, data interface{}) {
 	if _, err := os.Stat(name); err == nil {
 		f, _ := os.OpenFile(name, os.O_RDWR|os.O_TRUNC, 0644)
 		d, _ := json.Marshal(data)
-		_,_ = f.Write(d) //Yes I know these have unhandled errors.
+		_, _ = f.Write(d) //Yes I know these have unhandled errors.
 		_ = f.Close()
 		println("Opened file and wrote", name)
 		return

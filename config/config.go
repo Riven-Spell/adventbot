@@ -2,12 +2,13 @@ package config
 
 const (
 	RoleChannelID     string = "517807197145792532"
-	LangMessageID     string = "517967915140513792"
-	ParadigmMessageID string = "517968012347703296"
+	ParadigmMessageID string = "518017735846789124"
 	NoSpoilerID       string = "512974438845644812"
 	SpoilerID         string = "512974471984840705"
 	BotUserID         string = "517815151513043114"
 )
+
+var LangMessageID = []string{"518017694759649301", "518017705333489664", "518017713214324749", "518017724367241216"}
 
 var LangToRole = map[string]string{ //EmoteID:RoleID
 	"Cplusplus:517838183208321043":  "517823567803580416", // C++
@@ -32,6 +33,10 @@ var LangToRole = map[string]string{ //EmoteID:RoleID
 	"Bash:517837770589470721":       "517825139979583507", //Bash
 	"Javascript:517837896833826819": "517825262042349618", //Javascript
 	"Ruby:517837826981756940":       "517826173712072734", //Ruby
+	"Idris:518011715460399105":      "518012533970436096", //Idris
+	"Lua:518012752862642197":        "518011969861845002", //LUA
+	"Prolog:518011716026499083":     "518012405314355200", //Prolog
+	"ATS:518011715686891550":        "518011795374342175", //ATS
 	//I want to kill myself after copying all of that
 }
 
